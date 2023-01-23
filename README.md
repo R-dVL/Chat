@@ -1,13 +1,23 @@
-# Cliente
-Script para iniciar cliente que conectará con un servidor para intercambiar mensajes.
+# Chat
+Terminal Client-Server Chat built in Python with chat log.
 
-Para ello he usado:
-- "socket" para crear las conexiones del servidor y el cliente. 
-- "sys" para introducir los argumentos IP y Puerto al llamar al programa (he estado usando el localhost y el puerto 8000 para las pruebas).
+## Description
+The chat is divided in two scripts, **Server** and **Client**. Both of them needs two arguments when calling the main.py, IP and Port.
 
-## Log
-Consta con un log en el que se guardará desde la conversación hasta las conexiones y errores.
+>$ python3 main.py 127.0.0.1 8000
 
-He usado datetime para el timestamp y un context manager para abrir y cerrar el archivo "log.txt".
+Server will start to listen to connections in this IP and Port, while Client will try to start a connection in the IP and Port introduced.
 
-(se podría haber depurado más el formato y los errores recogidos pero no creo que fuera la finalidad).
+Once the connection is stablished, they will alternate to send messages:
+
+>Client -> Server -> Client...
+___
+    $ Client: Hi!
+    $ >...
+___
+    $ You: Hi!
+    $ Server: Sup.
+    $ >...
+___
+
+Type exit in order to finish the server or client connection.
