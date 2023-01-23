@@ -1,1 +1,0 @@
-# Any setup, for example a camera configuration.

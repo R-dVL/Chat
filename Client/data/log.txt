@@ -1,0 +1,5 @@
+
+12/20/22 18:05:30 Client: Conexi�n con servidor establecida.
+12/20/22 18:05:36 Client: Funciona?
+12/20/22 18:05:41 Server: Funciona!
+12/20/22 18:05:45 Client: Fin de la conexion.
