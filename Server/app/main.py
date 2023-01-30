@@ -2,9 +2,6 @@ import socket
 import sys
 from datetime import datetime
 
-IP = str(sys.argv[1])    # IP usada por el server
-PORT = int(sys.argv[2])    # Puerto que usará el server
-
 # Función para escribir mensajes en el log
 def Log_Write(timestamp, usr, txt):
     with open("../data/log.txt", 'a') as log:
@@ -17,43 +14,41 @@ def Log_Write(timestamp, usr, txt):
     
 # Servidor
 def server():
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)    # Crear Socket
-    try:
-        server.bind((IP, PORT))    # Alojar servidor en IP y Puerto introducidos
-        server.listen()    # Esperar conexión
-        print(f'Esperando conexiones en: {IP}:{PORT}...')
-        client, addr = server.accept()    # Aceptar conexión entrante
-        with client:
-            print(f"{addr} se ha conectado.")
-            Log_Write(datetime.now().strftime("%D %H:%M:%S"), addr, "Nueva conexión")
+    # Crea un socket TCP/IP
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-            while True:
-                # Datos recibidos del cliente
-                data = client.recv(1024)
-                # Si recibe "exit" anota la desconexión del cliente
-                if data.decode() == "exit":
-                    Log_Write(datetime.now().strftime("%D %H:%M:%S"), addr, "Desconexion.")
-                    break
-                # Muestra por consola y anota el texto recibido
-                print(f"{addr} dice: {data.decode()}")
-                Log_Write(datetime.now().strftime("%D %H:%M:%S"), addr, data.decode())
+    # Obtiene el nombre de host local
+    host = socket.gethostname()
+    port = int(sys.argv[1])    # Puerto que está usando el servidor
 
-                # Respuesta al cliente
-                data = input(">> ")
-                # Si el usuario introduce "exit" se cerrará el servidor
-                if data == "exit":
-                    client.sendall(data.encode())
-                    break
-                # Anota el texto enviado al client en el log
-                Log_Write(datetime.now().strftime("%D %H:%M:%S"), "Server", data)
-                client.sendall(data.encode())
-    except:
-        Log_Write(datetime.now().strftime("%D %H:%M:%S"), "Server", "Fallo en el servidor.")
-        raise Exception("Fallo en el servidor.")
-    
-    finally:
-        Log_Write(datetime.now().strftime("%D %H:%M:%S"), addr, "Fin de la conexion.")
-        print("Fin de la conexion.")
-            
+    # Enlaza el socket a una dirección y un puerto específicos
+    server_socket.bind((host, port))
+
+    # Escucha por nuevas conexiones
+    server_socket.listen(5)
+
+    print(f'Servidor escuchando en {host}:{port} ...')
+
+    # Una lista de clientes conectados
+    clients = []
+
+    while True:
+        # Acepta una nueva conexión
+        client_socket, client_address = server_socket.accept()
+        print(f'Conexión establecida desde {client_address[0]}:{client_address[1]}')
+        clients.append(client_socket)
+
+        # Recibe mensajes del cliente y los transmite a todos los demás clientes conectados
+        while True:
+            message = client_socket.recv(1024).decode('utf-8')
+            if not message:
+                break
+            print(f'Recibido desde {client_address[0]}:{client_address[1]}: {message}')
+            for client in clients:
+                client.send(message.encode('utf-8'))
+
+    # Cierra la conexión del cliente
+    client_socket.close()
+
 if __name__ == "__main__":
     server()
