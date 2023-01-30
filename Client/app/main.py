@@ -15,39 +15,23 @@ def Log_Write(timestamp, usr, txt):
 # Cliente
 def client():
     # Crea un socket TCP/IP
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    # Obtiene el nombre de host local
+    # Establece una conexión con el servidor
     host = socket.gethostname()
     port = int(sys.argv[1])    # Puerto que está usando el servidor
+    client_socket.connect((host, port))
 
-    # Enlaza el socket a una dirección y un puerto específicos
-    server_socket.bind((host, port))
+    print(f'Conectado a {host}:{port}')
 
-    # Escucha por nuevas conexiones
-    server_socket.listen(5)
-
-    print(f'Servidor escuchando en {host}:{port} ...')
-
-    # Una lista de clientes conectados
-    clients = []
-
+    # Envía mensajes al servidor y recibe mensajes de otros clientes a través del servidor
     while True:
-        # Acepta una nueva conexión
-        client_socket, client_address = server_socket.accept()
-        print(f'Conexión establecida desde {client_address[0]}:{client_address[1]}')
-        clients.append(client_socket)
+        message = input('Ingrese su mensaje: ')
+        client_socket.send(message.encode('utf-8'))
+        data = client_socket.recv(1024).decode('utf-8')
+        print(f'Recibido: {data}')
 
-        # Recibe mensajes del cliente y los transmite a todos los demás clientes conectados
-        while True:
-            message = client_socket.recv(1024).decode('utf-8')
-            if not message:
-                break
-            print(f'Recibido desde {client_address[0]}:{client_address[1]}: {message}')
-            for client in clients:
-                client.send(message.encode('utf-8'))
-
-    # Cierra la conexión del cliente
+    # Cierra la conexión
     client_socket.close()
         
 if __name__ == "__main__":
