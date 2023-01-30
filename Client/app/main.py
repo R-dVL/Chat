@@ -2,9 +2,6 @@ import socket
 import sys
 from datetime import datetime
 
-IP = str(sys.argv[1])    # IP en la que se encuentra el servidor
-PORT = int(sys.argv[2])    # Puerto que está usando el servidor
-
 # Función para escribir mensajes en el log
 def Log_Write(timestamp, usr, txt):
     with open("../data/log.txt", 'a') as log:
@@ -17,32 +14,41 @@ def Log_Write(timestamp, usr, txt):
 
 # Cliente
 def client():
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)    # Crear socket para la conexión
-    try:
-        server.connect((IP, PORT))    # Realizar conexión
-        Log_Write(datetime.now().strftime("%D %H:%M:%S"), "Client", "Conexión con servidor establecida.")
+    # Crea un socket TCP/IP
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # Obtiene el nombre de host local
+    host = socket.gethostname()
+    port = int(sys.argv[1])    # Puerto que está usando el servidor
+
+    # Enlaza el socket a una dirección y un puerto específicos
+    server_socket.bind((host, port))
+
+    # Escucha por nuevas conexiones
+    server_socket.listen(5)
+
+    print(f'Servidor escuchando en {host}:{port} ...')
+
+    # Una lista de clientes conectados
+    clients = []
+
+    while True:
+        # Acepta una nueva conexión
+        client_socket, client_address = server_socket.accept()
+        print(f'Conexión establecida desde {client_address[0]}:{client_address[1]}')
+        clients.append(client_socket)
+
+        # Recibe mensajes del cliente y los transmite a todos los demás clientes conectados
         while True:
-            # Mensaje a servidor
-            message = input(">> ")
-            # Si el mensaje introducido es "exit" se desconecta el cliente
-            if message == "exit":
-                server.sendall(message.encode())
+            message = client_socket.recv(1024).decode('utf-8')
+            if not message:
                 break
-            Log_Write(datetime.now().strftime("%D %H:%M:%S"), "Client", message)
-            server.sendall(message.encode())
+            print(f'Recibido desde {client_address[0]}:{client_address[1]}: {message}')
+            for client in clients:
+                client.send(message.encode('utf-8'))
 
-            # Respuesta del servidor
-            data = server.recv(1024)
-            print("Server: " + data.decode())
-            Log_Write(datetime.now().strftime("%D %H:%M:%S"), "Server", data.decode())
-
-    except:
-        Log_Write(datetime.now().strftime("%D %H:%M:%S"), "Client", "Error de conexion.")
-        raise Exception("Error de conexion.")
-
-    finally:
-        print("Fin de la conexion.")
-        Log_Write(datetime.now().strftime("%D %H:%M:%S"), "Client", "Fin de la conexion.")
+    # Cierra la conexión del cliente
+    client_socket.close()
         
 if __name__ == "__main__":
     client()
